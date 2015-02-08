@@ -1,0 +1,167 @@
+Innards use cases
+
+  - player opens game
+  - game.js is loaded and requires all game states
+  - bootstrap game
+  - load assets
+  - open the menu
+  - title comes up from bottom of screen
+  - buttons appear
+
+
+  - player can hit single player
+
+    - play state begins
+    - initialize group layers for sprites (ie what layers each sprite should be on)
+      - back layer
+        - static game elements ( main bg,etc)
+      - grid layer
+        - the line drawing of the actual gameplay grid
+      - enemy layer
+      - wall layer
+      - interface layer
+    
+    - initialize each game component
+      - UserInterface
+        - will deal with displaying of Buttons and on screen input during the game
+      - grid:
+        - manage phaser tilemap and layers
+        - deal with the path finder to pass paths to enemies
+      - spawner: (enemy manager)
+        - will create a pool of sprites to use as enemies
+        - will manage spawning and killing of enemies
+
+    - UserInterface Initializes:
+      - draw backgroundImage in background group
+
+    - grid initializes:
+      - tilemap for displaying walls
+      - path finder for finding the shortest path out
+      - drag grid over background image
+    
+    - spawner creates enemy pool
+
+    - userinterface allows player to pick their base position along the border
+
+    - userinterface presents player with options for walls/towers
+
+    - player places wall
+      - player taps on one of 3 walls displayed at the bottom of the screen
+        - 3 walls are cheap, moderate, and expensive
+        - cheap ones are smaller and easier to place, usually 1x1
+        - moderate ones are moderate and moderate to place, usually 3x3
+        - hard ones are expensive and hard to place, usually 5x5
+      - player drags the wall around by moving thumb around center of screen
+      - player rotates by pressing cooresponding buttoms on the bottom left hand side of the screen
+      - player commits or cancels by using buttons on the right side of the screen
+      - once a user commits to a wall, he must continue to wall placement. 
+      - the player cannot skip placing a wall unless there is nowhere to place one
+    
+    - player places tower
+      - player taps on one of 3 towers displayed at the bottom of the screen
+        - 3 towers are cheap, moderate, and expensive
+        - cheap ones are smaller and easier to place, usually 1x1
+        - moderate ones are moderate and moderate to place, usually 2x2
+        - hard ones are expensive and hard to place, usually 3x3
+      - player drags the tower around by moving thumb around center of screen
+      - player rotates by pressing cooresponding buttoms on the bottom left hand side of the screen
+      - player commits or cancels by using buttons on the right side of the screen
+      - towers can only be placed entirely on top of walls
+      - once a user commits to a tower, he must continue to tower placement. 
+
+    - once player commits to tower placement:
+
+    - spawner finds the shortest path through the maze around
+      - passes it to the enemies
+      - prepares all the enemies for the wave
+
+    - timer counts down 3 seconds
+
+    - enemies are spawned and follow the path
+
+    - player can increase speed up to 4x if they want to skip this phase
+
+    - player cannot affect gameplay during this phase outside of controlling tower ai
+
+    - each kill earned during the spawn phase earns the player currency for the next round
+
+    - game is over if player loses all lives
+
+
+
+
+
+
+  - player can hit multi player
+    
+    - active mode
+      - players play head to head on the same map
+      - similar flow to single player except:
+        - players take turns building during the build phase
+        - swap between going first, picking 3 walls and 3 towers
+      - main difference is that currency is earned by getting creeps into your base
+      - walls are placed to make opponents maze longer, and towers are placed to get him less creeps
+      - creeps are far stronger and more plentiful in this mode
+      - towers are much weaker, killing half of your opponents creeps is a big dael
+      - creeps swap between north/south and east/west
+      - one player is in the top left, one is in the bottom right
+    
+    - passive mode
+      - players save a version of a single player game where they send out creeps to their opponent
+      - round data is recorded and saved on server
+      - players play against recorded creep data from other players 
+      - or players play against semi random creep sets to see who can get the most points on the same data
+
+    - client
+      - sends data to server
+
+    - server
+
+
+
+
+
+
+
+
+State Flow
+  Game = {
+    Boot: {},
+    Load: {},
+    Menu: {},
+    Play: {
+      Single: {},
+      Multi: {}
+    }
+  }
+
+
+
+
+
+
+Notes
+
+- rymdkapsel like shape changing for towers, in order to make the game more difficult
+- have to place a tower each round, you have 3 shape with 3 tower options, no gun at all, a weak gun, a strong gun
+- long skinny ones, asymetrical ones, square ones, single ones
+- 3 to choose from each round
+- shape and tower are linked
+- good towers have awkward shape
+- cant sell towers
+- can always buy individual no turret for cheap
+
+- set up proper automation for the server
+
+- email tim mokesmoe about game
+
+- make game using better object orriented Techniques
+- look up books for better object orriented Techniques
+- use paper and pencil to rough out classes before hand and work out gameplay features
+- determine what methods will be needed for each class and what vars it will need for those methods
+- fix grid system by properly understanding phaser tile grids
+
+
+- walls will be generated as a phaser groups that can be rotated and dragged by the player
+- when they commit, the objects will be used to create tiles on the grid and then the group will be destroyed
+- similar with towers, but one single sprite and on a second tilemap layer

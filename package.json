@@ -12,5 +12,10 @@
     "browserify": "^8.1.1",
     "phaser": "^2.2.2",
     "pathfinding": "^0.4.16"
+  },
+  "dependencies": {
+    "engine.io": "^1.5.1",
+    "eureca.io": "^0.6.2",
+    "express": "^4.11.1"
   }
 }

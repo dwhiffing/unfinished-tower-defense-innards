@@ -1,26 +1,24 @@
 module.exports = {
+  constructor: function() {
+    this.loadingSprite = null;
+  },
 
-    constructor: function() {
-        this.loadingSprite = null;
-    },
+  preload: function() {
+    this.load.onLoadComplete.addOnce(this.onLoadComplete, this);
 
-    preload: function() {
-        this.loadingSprite = this.add.sprite(320, 480, 'preloader');
-        this.loadingSprite.anchor.setTo(0.5, 0.5);
+    this.load.spritesheet('button', 'images/button.png', 193, 71);
+    this.load.image('spawner', 'images/spawner.png');
+    this.load.image('bullet', 'images/bullet.png');
+    this.load.image('towerMenu', 'images/selector2.png');
+    this.load.image('tower', 'images/tower.png');
+    this.load.image('towerbutton', 'images/towerbutton.png');
+    this.load.image('wallbutton', 'images/wallbutton.png');
+    this.load.image('bg', 'images/bg.jpg');
+    this.load.image('enemy', 'images/enemy4.png');
+    this.load.image('tile', 'images/tile3.png');
+  },
 
-        this.load.onLoadComplete.addOnce(this.onLoadComplete, this);
-        this.load.setPreloadSprite(this.loadingSprite);
-
-        // Load game assets here
-        this.load.image('logo', 'images/logo.png');
-        this.load.image('enemy', 'images/enemy.png');
-        this.load.spritesheet('tile', 'images/tile.png', 50, 50);
-    },
-
-    create: function() {},
-
-    onLoadComplete: function() {
-        this.game.state.start('menu', true, false);
-    }
-
+  onLoadComplete: function() {
+    game.state.start('play', true, false);
+  }
 }

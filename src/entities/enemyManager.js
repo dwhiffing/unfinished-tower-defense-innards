@@ -1,65 +1,79 @@
+var Enemy = require('../entities/enemy.js')
+
 var EnemyManager = function (game, opts)  {
   var opts = opts || {};
-  this.game = game;
-  // initialize configs
+  this.cursor = 0;
+
   this.setConfig(opts);
-  // create enemy pool
-  this.group = this.game.add.group();
-  for(var i = 0; i < 10; i++){
-    var enemy = this.game.add.sprite(-50, -50, 'enemy');
-    enemy.height = this.tileSize;
-    enemy.width = this.tileSize;
-    this.group.add(enemy);
-  }
-  this.updateTweens()
+  this.createEnemyPool();
 }
 
 EnemyManager.prototype.constructor = EnemyManager;
 
 EnemyManager.prototype.setConfig = function(opts) {
-  this.tileSize = opts.tileSize || this.game.grid.tileSize;
-  this.enemyHeight = opts.enemyHeight || this.tileSize/2;
-  this.enemySpeed = opts.enemySpeed || 10;
+  // initialize configs
+  this.tileSize = opts.tileSize || game.grid.tileSize;
+  this.enemyHeight = opts.enemyHeight || this.tileSize*.9;
+  this.enemySpeed = opts.enemySpeed || 8;
+  
   // space between enemies in wave
-  this.spacing = opts.spacing || 10*this.tileSize;
+  this.spacing = opts.spacing || 40 * this.tileSize;
+  this.spacing /= (20/this.enemySpeed)
+
+  // direction of next spawn (0: up, 1: down, 2: left, 3: right)
+  this.direction = 0;
 }
 
-EnemyManager.prototype.spawnWave = function(wavesize){
-  wavesize = wavesize || 5;
-}
-
-EnemyManager.prototype.setCoords = function(array, thing) {
-  thing = thing || {};
-  thing.x = this.game.grid.tx(array[0])+this.enemyHeight/2;
-  thing.y = this.game.grid.ty(array[1])+this.enemyHeight/2;
-  return thing;
-}
-
-EnemyManager.prototype.updateTweens = function() {
-  var waypoints = this.game.grid.fullPath;
-  if (waypoints.length === 0) return;
-  // var deadEnemies = this.group.filter(function(obj){obj.dead===true})
-
-  for(var i = 0; i < this.group.length; i++) {
-    var enemy = this.group.children[i];
-    if (enemy.lastTween) {enemy.lastTween.stop();}
-    this.setCoords(waypoints[0], enemy);
-    var tween = this.game.add.tween(enemy).to({x: this.x}, this.spacing*i+1, Phaser.Easing.Linear.None);
-    enemy.lastTween = tween;
-    for(var j = 1; j < waypoints.length; j++) {
-      var nPos = this.setCoords(waypoints[j]);
-      var oPos = this.setCoords(waypoints[j-1]);
-      var distance = this.getDistance(nPos, oPos) * this.enemySpeed;
-      tween.to({x: nPos.x, y: nPos.y }, distance, Phaser.Easing.Linear.None);
-    }
-    tween.onComplete.add(function(enemy) {
-      enemy.kill();
-    }, enemy)
-    tween.start();
+EnemyManager.prototype.createEnemyPool = function(opts) {
+  // create pool of enemies for spawning
+  this.group = game.add.group();
+  for(var i = 0; i < 50; i++){
+    var enemy = new Enemy(game, {size: this.enemyHeight, speed: this.enemySpeed});
+    this.group.add(enemy);
   }
 }
 
-EnemyManager.prototype.getDistance = function(p1,p2) {
-  return Math.sqrt( Math.pow((p1.x - p2.x), 2) + Math.pow((p1.y - p2.y), 2) );
+EnemyManager.prototype.spawnWave = function(wavesize){
+  // null out time to next round until this round finishes
+  game.timeToNextRound = null;
+  if (this.isSpawning) return
+  this.isSpawning = true;
+  
+  // create the next wave of enemies
+  wavesize = wavesize || 5;
+  var deadEnemies = this.getDeadEnemies();
+  this.enemiesToRevive = deadEnemies.splice(1, wavesize);
+
+  var tile = game.grid.map.getTile(game.grid.center.x, game.grid.center.y, game.grid.layer)
+  var spawnx = tile.worldX
+  var spawny = tile.worldY
+
+  this.cursor = 0;
+  this.spawnEnemy(spawnx,spawny);
+  game.time.events.repeat(this.spacing, this.enemiesToRevive.length-1, this.spawnEnemy, this, spawnx, spawny);
+  game.grid.clear(this.direction)
+  this.direction++;
+  if (this.direction === 4) this.direction = 0;
 }
+
+EnemyManager.prototype.spawnEnemy = function(x, y) {
+  var enemy = this.enemiesToRevive[this.cursor];
+  if(!enemy) return
+  this.cursor++;
+  if (this.cursor == this.enemiesToRevive.length) {
+    game.time.events.add(this.spacing, function(){
+      this.isSpawning = false;
+    },this)
+  }
+  enemy.spawn(x, y, this.spacing);
+}
+
+EnemyManager.prototype.getAliveEnemies = function() {
+  return this.group.filter(function(obj){if(obj.alive===true)return obj }).list
+}
+
+EnemyManager.prototype.getDeadEnemies = function() {
+  return this.group.filter(function(obj){if(obj.alive===false)return obj }).list
+}
+
 module.exports = EnemyManager

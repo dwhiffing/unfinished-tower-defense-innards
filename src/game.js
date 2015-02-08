@@ -1,10 +1,4 @@
-//We use window.game because we want it to be accessible from everywhere
-window.game = new Phaser.Game(400, window.innerHeight, Phaser.AUTO, 'game-container');
-
-game.globals = {
-    //Add variables here that you want to access globally
-    //score: 0 could be accessed as game.globals.score for example
-};
+window.game = new Phaser.Game(750, 1334, Phaser.AUTO, 'game-container');
 
 game.state.add('play', require('./states/play.js'));
 game.state.add('load', require('./states/load.js'));

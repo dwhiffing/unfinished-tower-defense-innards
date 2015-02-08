@@ -1,16 +1,16 @@
 module.exports = {
   create: function() {
-    this.logo = this.add.sprite(
-      this.game.width / 2, this.game.height / 2,
-      'logo'
-    );
-    this.logo.anchor.setTo(0.5);
+    
+    // display current connection status
+    var style = { font: "22px Arial", fill: "#ffffff", align: "center" };
+    game.connectionText = game.add.text(game.width/2, game.height/2, "Looking for connections...", style);
+    game.connectionText.anchor.set(0.5);
 
-    // this.game.input.onDown.add(this.startGame, this);
-    this.game.state.start('play');
-  },
-
-  startGame: function() {
-    this.game.state.start('play');
+    // display id for user
+    game.displayUserIdText = game.add.text(game.width/2, game.height/2-300, "", style);
+    game.displayUserIdText.anchor.set(0.5);
+    
+    // initialize the client
+    // require('../client.js').create();
   }
 }
