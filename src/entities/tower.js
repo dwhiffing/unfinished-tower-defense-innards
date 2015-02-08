@@ -1,11 +1,9 @@
-var Tower = function(game, x, y) {
+var Tower = function(x, y) {
   Phaser.Sprite.call(this, game, x, y, 'tower');
   this.anchor.setTo(0.5,0.5)
-  this.shootTimer = 0;
-  this.delay = 200+game.rnd.integerInRange(0,500);
   this.range = 300;
-  this.target = game.enemies.getAliveEnemies()[0];
   game.towers.add(this);
+  game.time.events.loop(Phaser.Timer.SECOND/4, this.shoot, this)
 }
 
 Tower.prototype = Object.create(Phaser.Sprite.prototype)
@@ -25,16 +23,15 @@ Tower.prototype.update = function(enemy) {
       this.target = potentialTargets[i]
     }
   }
-  if (this.target) {
+  if (this.target && this.target.alive) {
     this.pointAt(this.target);
-    // this.shoot()
   }
 }
 
 Tower.prototype.shoot = function(enemy) {
+  if(!this.target || !this.target.alive) return
   var distance = game.physics.arcade.distanceToXY(this, this.target.x, this.target.y);
-  if (this.shootTimer < game.time.now && this.range >= distance) {
-    this.shootTimer = game.time.now + this.delay;
+  if (this.range >= distance) {
     var bullet = game.bullets.create(this.x, this.y, 'bullet')
     game.physics.enable(bullet)
     bullet.outOfBoundsKill = true;

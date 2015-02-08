@@ -1,4 +1,5 @@
 var WallGroup = require('../entities/WallGroup.js');
+var Tower = require('../entities/tower.js');
 
 var WallManager = function() {
   this.minos = [
@@ -43,6 +44,11 @@ WallManager.prototype.createWall = function() {
   var shape = game.rnd.integerInRange(0,this.minos[size].length-1)
   var wall = new WallGroup(this.minos[size][shape]);
   return wall;
+}
+
+WallManager.prototype.createTower = function() {
+  var tower = new Tower(0,0);
+  return tower;
 }
 
 module.exports = WallManager

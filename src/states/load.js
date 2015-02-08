@@ -9,6 +9,7 @@ module.exports = {
     this.load.spritesheet('button', 'images/button.png', 193, 71);
     this.load.image('spawner', 'images/spawner.png');
     this.load.image('bullet', 'images/bullet.png');
+    this.load.image('arrow', 'images/arrow.png');
     this.load.image('towerMenu', 'images/selector2.png');
     this.load.image('tower', 'images/tower.png');
     this.load.image('towerbutton', 'images/towerbutton.png');

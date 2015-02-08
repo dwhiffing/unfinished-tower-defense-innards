@@ -2,7 +2,6 @@ module.exports = {
 
   preload: function () {
     this.load.baseURL = 'src/assets/';
-    game.time.advancedTiming = true;
   },
 
   create: function () {

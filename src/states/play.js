@@ -5,6 +5,12 @@ var Interface = require('../entities/interface.js');
 
 module.exports = {
   create: function() {
+    game.time.advancedTiming = true;
+    game.time.desiredFps = 60;
+    game.time.slowMotion = 1;
+    game.juicy = game.plugins.add(require('../lib/juicy.js'));
+    game.fpsProblemNotifier.add(this.handleFpsProblem, this);
+    
     // initialize physics
     game.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -18,6 +24,9 @@ module.exports = {
     game.enemies = new EnemyManager(game);
     game.walls = new WallManager(game);
     game.ui = new Interface(game);
+
+    game.gui = new dat.GUI();
+    game.gui.add(game.time, 'slowMotion', 0.1, 3);
 
     // start the game up!
     game.ui.startBuildPhase()
@@ -33,6 +42,11 @@ module.exports = {
   bulletOverlap: function(enemy, bullet) {
     enemy.damage(1);
     bullet.kill();
+  },
+  
+  handleFpsProblem: function() {
+    // modify the game desired fps to match the current suggested fps
+    game.time.desiredFps = game.time.suggestedFps;
   },
 
   render: function() {

@@ -12,6 +12,9 @@ var Grid = function (game)  {
   this.map = game.add.tilemap();
   this.map.setTileSize(this.tileSize, this.tileSize);
   this.map.addTilesetImage('tile');
+  
+  this.arrow = game.add.sprite(0,0,'arrow');
+  this.arrow.anchor.set(0.5,0.5)
 
   // set up the tile layer to draw the walls and towers
   this.layer = this.map.create(
@@ -78,6 +81,7 @@ Grid.prototype.clear = function(direction) {
 }
 
 Grid.prototype.openCenter = function(direction) {
+  var x,y, angle
   this.data[this.center.y-1][this.center.x-1] = 1;
   this.data[this.center.y-1][this.center.x+1] = 1;
   this.data[this.center.y  ][this.center.x  ] = 1;
@@ -88,17 +92,18 @@ Grid.prototype.openCenter = function(direction) {
   this.data[this.center.y+1][this.center.x] = 1; // down
   this.data[this.center.y][this.center.x-1] = 1; // left
   this.data[this.center.y][this.center.x+1] = 1; // right
-
   if (direction === 0) {
-    this.data[this.center.y-1][this.center.x] = 0; // up
+    x = this.center.x; y = this.center.y-1; angle = 0;
   } else if (direction === 1) {
-    this.data[this.center.y+1][this.center.x] = 0; // down
+    x = this.center.x; y = this.center.y+1; angle = 180;
   } else if (direction === 2) {
-    this.data[this.center.y][this.center.x-1] = 0; // left
+    x = this.center.x-1; y = this.center.y; angle = 270;
   } else {
-    this.data[this.center.y][this.center.x+1] = 0; // right
+    x = this.center.x+1; y = this.center.y; angle = 90;
   }
-
+  this.data[y][x] = 0;
+  this.arrow.position.set(x*50+this.arrow.width/2, y*50+this.arrow.height/2)
+  this.arrow.angle = angle
 }
 
 Grid.prototype.getPath = function(start, end, toVector) {
@@ -106,14 +111,18 @@ Grid.prototype.getPath = function(start, end, toVector) {
   var toVector = toVector || true;
   var grid = new PF.Grid(this.width, this.height, this.data);
   var path = this.finder.findPath(start.x, start.y, end.x, end.y, grid);
-  if (path.length === 0) return
+  if (path.length === 0) return false
   path = PF.Util.expandPath(path);
   if(toVector) {
     for(var i = 0; i < path.length; i++) {
       path[i] = {x: path[i][0], y: path[i][1]}
     }
   }
-  return path
+  if (path) {
+    return path
+  } else{
+    return false
+  }
 }
 
 Grid.prototype.drawWaypoints = function() {

@@ -3,6 +3,7 @@ var Enemy = require('../entities/enemy.js')
 var EnemyManager = function (game, opts)  {
   var opts = opts || {};
   this.cursor = 0;
+  this.waveNum = 0;
 
   this.setConfig(opts);
   this.createEnemyPool();
@@ -14,7 +15,7 @@ EnemyManager.prototype.setConfig = function(opts) {
   // initialize configs
   this.tileSize = opts.tileSize || game.grid.tileSize;
   this.enemyHeight = opts.enemyHeight || this.tileSize*.9;
-  this.enemySpeed = opts.enemySpeed || 1;
+  this.enemySpeed = opts.enemySpeed || 5;
   
   // space between enemies in wave
   this.spacing = opts.spacing || 40 * this.tileSize;
@@ -40,7 +41,7 @@ EnemyManager.prototype.spawnWave = function(wavesize){
   this.isSpawning = true;
   
   // create the next wave of enemies
-  wavesize = wavesize || 5;
+  wavesize = wavesize || 5 + (1*this.waveNum);
   var deadEnemies = this.getDeadEnemies();
   this.enemiesToRevive = deadEnemies.splice(1, wavesize);
 
@@ -51,8 +52,9 @@ EnemyManager.prototype.spawnWave = function(wavesize){
   this.cursor = 0;
   this.spawnEnemy(spawnx,spawny);
   game.time.events.repeat(this.spacing, this.enemiesToRevive.length-1, this.spawnEnemy, this, spawnx, spawny);
-  game.grid.openCenter(this.direction)
+  this.enemyHealth = 3 + (1*this.waveNum)
   this.direction++;
+  this.waveNum++;
   if (this.direction === 4) this.direction = 0;
 }
 
@@ -65,7 +67,7 @@ EnemyManager.prototype.spawnEnemy = function(x, y) {
       this.isSpawning = false;
     },this)
   }
-  enemy.spawn(x, y, this.spacing);
+  enemy.spawn(x, y, this.spacing, this.enemyHealth);
 }
 
 EnemyManager.prototype.getAliveEnemies = function() {

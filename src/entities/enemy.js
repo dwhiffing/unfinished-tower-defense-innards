@@ -17,7 +17,7 @@ Enemy.prototype.setConfig = function(opts) {
   this.anchor.setTo(0.5,0.5);
 
   this.speed = opts.speed;
-  this.maxHealth = opts.heath || 25;
+  this.maxHealth = opts.heath || 8;
   
   this.offset = game.grid.tileSize/2;
   this.nextWaypoint = 0;
@@ -44,9 +44,9 @@ Enemy.prototype.spawnTween = function(duration) {
   this.startTweenAlpha.to({alpha: 1}, duration, Phaser.Easing.Quadratic.InOut, true)
 }
 
-Enemy.prototype.spawn = function(x, y, spacing) {
+Enemy.prototype.spawn = function(x, y, spacing, health) {
   // initialize this enemy from the spawner
-  this.reset(x+this.offset, y+this.offset, this.maxHealth);
+  this.reset(x+this.offset, y+this.offset, health);
   this.spawnTween(spacing/2);
   game.time.events.add(spacing/2, this.startMoving, this)
   this.nextWaypoint = 0;
