@@ -1,10 +1,10 @@
-var Enemy = function(game, opts) {
+var Enemy = function(opts) {
   var opts = opts || {}
   Phaser.Sprite.call(this, game, -50, -50, 'enemy');
   this.setConfig(opts);
   
   game.physics.enable(this);
-  this.kill();
+  Phaser.Sprite.prototype.kill.call(this);
 }
 
 Enemy.prototype = Object.create(Phaser.Sprite.prototype)
@@ -47,6 +47,7 @@ Enemy.prototype.spawnTween = function(duration) {
 Enemy.prototype.spawn = function(x, y, spacing, health) {
   // initialize this enemy from the spawner
   this.reset(x+this.offset, y+this.offset, health);
+  this.alive = false;
   this.spawnTween(spacing/2);
   game.time.events.add(spacing/2, this.startMoving, this)
   this.nextWaypoint = 0;
@@ -54,11 +55,12 @@ Enemy.prototype.spawn = function(x, y, spacing, health) {
 
 Enemy.prototype.startMoving = function() {
   var self = this;
+  this.alive = true;
   
   this.pulsateTween();
-  var tween = game.add.tween(this)
+  this.pathTween = game.add.tween(this);
   if (this.nextWaypoint === 0) {
-    tween.to({x: this.x}, 10, Phaser.Easing.Linear.None);
+    this.pathTween.to({x: this.x}, 10, Phaser.Easing.Linear.None);
     this.nextWaypoint++;
   }
   
@@ -78,7 +80,7 @@ Enemy.prototype.startMoving = function() {
   
   // stop any tweens in progress 
   if (this.lastTween) {this.lastTween.stop();}
-  this.lastTween = tween;
+  this.lastTween = this.pathTween;
   this.lastPath = path
 
   // tween the enemy to that tile, and chain each tween needed to the next waypoint
@@ -88,17 +90,34 @@ Enemy.prototype.startMoving = function() {
     var nPos = {x: nTile.worldX + this.offset, y: nTile.worldY + this.offset};
     var oPos = {x: oTile.worldX + this.offset, y: oTile.worldY + this.offset};
     var distance = this.getDistance(nPos, oPos) * this.speed;
-    tween.to({x: nPos.x, y: nPos.y }, distance, Phaser.Easing.Linear.None);
+    this.pathTween.to({x: nPos.x, y: nPos.y }, distance, Phaser.Easing.Linear.None);
   }
-  tween.onComplete.add(this.doKill, this)
-  tween.start();
+  this.pathTween.onComplete.add(this.kill, this)
+  this.pathTween.start();
 };
 
 Enemy.prototype.doKill = function(enemy) {
-  enemy.kill()
-  enemy.pulsate.stop()
-  enemy.spin.stop()
-  game.ui.checkEndOfRound()
+  if (enemy.alive) {
+    enemy.kill()
+  }
+}
+
+Enemy.prototype.kill = function() {
+  this.pulsate.stop()
+  this.spin.stop()
+  this.pathTween.stop()
+  this.alive = false;
+  game.emitter.x = this.x;
+  game.emitter.y = this.y;
+  game.emitter.start(true, 4000, null, 10);
+
+  var die = game.add.tween(this);
+  die.to({height: 0, width:0, alpha: 0, angle: -900}, 500, Phaser.Easing.Quadratic.Out)
+  die.onComplete.add(function(){
+    Phaser.Sprite.prototype.kill.call(this);
+    game.ui.checkEndOfRound()
+  });
+  die.start();
 }
 
 Enemy.prototype.getDistance = function(p1,p2) {

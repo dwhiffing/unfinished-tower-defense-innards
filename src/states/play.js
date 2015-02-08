@@ -1,5 +1,5 @@
-var EnemyManager = require('../entities/enemyManager.js');
-var WallManager = require('../entities/WallManager.js');
+var EnemyManager = require('../entities/enemy-manager.js');
+var WallManager = require('../entities/wall-manager.js');
 var Grid = require('../entities/grid.js');
 var Interface = require('../entities/interface.js');
 
@@ -16,17 +16,26 @@ module.exports = {
 
     // setup group for background elements
     game.backGroup = game.add.group();
-    game.bullets = game.add.group()
-    game.towers = game.add.group()
 
     // initialize individual game components
-    game.grid = new Grid(game);
-    game.enemies = new EnemyManager(game);
-    game.walls = new WallManager(game);
-    game.ui = new Interface(game);
+    game.grid = new Grid();
+
+    game.emitter = game.add.emitter(0, 0, 50)
+    game.emitter.makeParticles('gib')
+    game.emitter.gravity = 0
+    game.emitter.setScale(3, 0, 3, 0, 4000, Phaser.Easing.Quintic.Out);
+    game.emitter.setAlpha(1, 0, 4000);
+    
+    game.enemies = new EnemyManager();
+    game.walls = new WallManager();
+    game.ui = new Interface();
+
+    game.towers = game.add.group()
+    game.bullets = game.add.group()
 
     game.gui = new dat.GUI();
     game.gui.add(game.time, 'slowMotion', 0.1, 3);
+
 
     // start the game up!
     game.ui.startBuildPhase()

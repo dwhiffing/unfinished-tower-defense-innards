@@ -1,4 +1,4 @@
-var WallGroup = require('../entities/WallGroup.js');
+var WallGroup = require('../entities/wall-group.js');
 var Tower = require('../entities/tower.js');
 
 var WallManager = function() {

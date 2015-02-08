@@ -1,4 +1,4 @@
-var Grid = function (game)  {
+var Grid = function ()  {
   
   this.setConfig();
   this.group = game.add.group();
@@ -82,16 +82,16 @@ Grid.prototype.clear = function(direction) {
 
 Grid.prototype.openCenter = function(direction) {
   var x,y, angle
-  this.data[this.center.y-1][this.center.x-1] = 1;
-  this.data[this.center.y-1][this.center.x+1] = 1;
-  this.data[this.center.y  ][this.center.x  ] = 1;
-  this.data[this.center.y+1][this.center.x-1] = 1;
-  this.data[this.center.y+1][this.center.x+1] = 1;
+  this.data[this.center.y-1][this.center.x-1] = 3;
+  this.data[this.center.y-1][this.center.x+1] = 3;
+  this.data[this.center.y  ][this.center.x  ] = 3;
+  this.data[this.center.y+1][this.center.x-1] = 3;
+  this.data[this.center.y+1][this.center.x+1] = 3;
 
-  this.data[this.center.y-1][this.center.x] = 1; // up
-  this.data[this.center.y+1][this.center.x] = 1; // down
-  this.data[this.center.y][this.center.x-1] = 1; // left
-  this.data[this.center.y][this.center.x+1] = 1; // right
+  this.data[this.center.y-1][this.center.x] = 3; // up
+  this.data[this.center.y+1][this.center.x] = 3; // down
+  this.data[this.center.y][this.center.x-1] = 3; // left
+  this.data[this.center.y][this.center.x+1] = 3; // right
   if (direction === 0) {
     x = this.center.x; y = this.center.y-1; angle = 0;
   } else if (direction === 1) {

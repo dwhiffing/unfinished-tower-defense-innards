@@ -1,13 +1,12 @@
-var Wall = require('../entities/Wall.js');
+var Wall = require('../entities/wall.js');
 
 var WallGroup = function(shape) {
   Phaser.Group.call(this, game);
   this.classType = Wall;
-  var tileSize = 50;
   for(var i = 0; i < shape.length; i++) {
-    var x = shape[i][0]*tileSize
-    var y = shape[i][1]*tileSize
-    var wall = new Wall(x,y)
+    var x = shape[i][0]*game.grid.tileSize;
+    var y = shape[i][1]*game.grid.tileSize;
+    var wall = new Wall(x, y)
     this.add(wall)
   }
 }

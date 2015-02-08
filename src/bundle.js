@@ -1,201 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var Wall = function(x,y) {
-  Phaser.Sprite.call(this, game, x, y, 'wall');
-  this.anchor.set(0.5,0.5)
-}
-
-Wall.prototype = Object.create(Phaser.Sprite.prototype);
-Wall.prototype.constructor = Wall;
-
-module.exports = Wall
-},{}],2:[function(require,module,exports){
-var Wall = require('../entities/Wall.js');
-
-var WallGroup = function(shape) {
-  Phaser.Group.call(this, game);
-  this.classType = Wall;
-  var tileSize = 50;
-  for(var i = 0; i < shape.length; i++) {
-    var x = shape[i][0]*tileSize
-    var y = shape[i][1]*tileSize
-    var wall = new Wall(x,y)
-    this.add(wall)
-  }
-}
-
-WallGroup.prototype = Object.create(Phaser.Group.prototype);
-WallGroup.prototype.constructor = WallGroup;
-
-module.exports = WallGroup
-
-},{"../entities/Wall.js":1}],3:[function(require,module,exports){
-var WallGroup = require('../entities/WallGroup.js');
-var Tower = require('../entities/tower.js');
-
-var WallManager = function() {
-  this.minos = [
-    [
-      [
-        [0,0]
-      ]
-    ], [
-      [
-        [0,0], [1,0],
-      ]
-    ], [
-      [
-        [0,0], [1,0], [2,0],
-      ], [
-        [0,0], [1,0], [0,1],
-      ]
-    ], [
-      [
-        [0,0],[1,0],[2,0],[3,0]
-      ], [
-        [0,0],[1,0],[0,1],[1,1]
-      ], [
-        [0,0],[1,0],[2,0],[0,1]
-      ], [
-        [0,0],[1,0],[2,0],[2,1]
-      ], [
-        [0,0],[0,1],[1,1],[1,2]
-      ], [
-        [0,0],[1,0],[1,1],[1,2]
-      ], [
-        [0,0],[1,0],[2,0],[1,1]
-      ]
-    ]
-  ]
-}
-
-WallManager.prototype.constructor = WallManager;
-
-WallManager.prototype.createWall = function() {
-  var size = game.rnd.integerInRange(0,this.minos.length-1)
-  var shape = game.rnd.integerInRange(0,this.minos[size].length-1)
-  var wall = new WallGroup(this.minos[size][shape]);
-  return wall;
-}
-
-WallManager.prototype.createTower = function() {
-  var tower = new Tower(0,0);
-  return tower;
-}
-
-module.exports = WallManager
-},{"../entities/WallGroup.js":2,"../entities/tower.js":8}],4:[function(require,module,exports){
-var Enemy = function(game, opts) {
-  var opts = opts || {}
-  Phaser.Sprite.call(this, game, -50, -50, 'enemy');
-  this.setConfig(opts);
-  
-  game.physics.enable(this);
-  this.kill();
-}
-
-Enemy.prototype = Object.create(Phaser.Sprite.prototype)
-Enemy.prototype.constructor = Enemy;
-
-Enemy.prototype.setConfig = function(opts) {
-  // initialize configs
-  this.height = opts.size
-  this.width = opts.size
-  this.anchor.setTo(0.5,0.5);
-
-  this.speed = opts.speed;
-  this.maxHealth = opts.heath || 8;
-  
-  this.offset = game.grid.tileSize/2;
-  this.nextWaypoint = 0;
-}
-
-Enemy.prototype.pulsateTween = function(opts) {
-  this.spin = game.add.tween(this);
-  this.pulsate = game.add.tween(this);
-  var duration = game.rnd.integerInRange(this.speed*90,this.speed*100)
-  var delay = game.rnd.integerInRange(100,1000)
-  var angle = 360;
-  this.pulsate.to({height: 60, width:60}, duration/2, Phaser.Easing.Quadratic.InOut, true, delay, -1, true)
-  this.spin.to({angle: angle}, duration*2, Phaser.Easing.Linear.None, true, delay, -1)
-}
-
-Enemy.prototype.spawnTween = function(duration) {
-  this.startTween = game.add.tween(this);
-  this.startTweenAlpha = game.add.tween(this);
-
-  this.scale.set(0,0)
-  this.alpha = 0;
-
-  this.startTween.to({height: 50, width:50}, duration, Phaser.Easing.Quadratic.InOut, true)
-  this.startTweenAlpha.to({alpha: 1}, duration, Phaser.Easing.Quadratic.InOut, true)
-}
-
-Enemy.prototype.spawn = function(x, y, spacing, health) {
-  // initialize this enemy from the spawner
-  this.reset(x+this.offset, y+this.offset, health);
-  this.spawnTween(spacing/2);
-  game.time.events.add(spacing/2, this.startMoving, this)
-  this.nextWaypoint = 0;
-}
-
-Enemy.prototype.startMoving = function() {
-  var self = this;
-  
-  this.pulsateTween();
-  var tween = game.add.tween(this)
-  if (this.nextWaypoint === 0) {
-    tween.to({x: this.x}, 10, Phaser.Easing.Linear.None);
-    this.nextWaypoint++;
-  }
-  
-  // determine the closest tile to the enemies current position
-  var tile = game.grid.map.getTileWorldXY(this.x, this.y, game.grid.tileSize, game.grid.tileSize, game.grid.layer)
-  var start = {x: tile.x, y: tile.y};
-
-  // determine the next waypoint we want to go to
-  var path1 = game.grid.getPath(start, game.grid.waypoints[0], true);
-  // var path2 = game.grid.getPath(start, game.grid.waypoints[1], true);
-  var path;
-  // if (PF.Util.pathLength(path1) > PF.Util.pathLength(path2)) {
-    // path = game.grid.getPath(start, game.grid.waypoints[1]);
-  // } else {
-    path = game.grid.getPath(start, game.grid.waypoints[0]);
-  // }
-  
-  // stop any tweens in progress 
-  if (this.lastTween) {this.lastTween.stop();}
-  this.lastTween = tween;
-  this.lastPath = path
-
-  // tween the enemy to that tile, and chain each tween needed to the next waypoint
-  for(var j = 1; j < path.length; j++) {
-    var nTile = game.grid.map.getTile(path[j].x, path[j].y, game.grid.layer);
-    var oTile = game.grid.map.getTile(path[j-1].x, path[j-1].y, game.grid.layer);
-    var nPos = {x: nTile.worldX + this.offset, y: nTile.worldY + this.offset};
-    var oPos = {x: oTile.worldX + this.offset, y: oTile.worldY + this.offset};
-    var distance = this.getDistance(nPos, oPos) * this.speed;
-    tween.to({x: nPos.x, y: nPos.y }, distance, Phaser.Easing.Linear.None);
-  }
-  tween.onComplete.add(this.doKill, this)
-  tween.start();
-};
-
-Enemy.prototype.doKill = function(enemy) {
-  enemy.kill()
-  enemy.pulsate.stop()
-  enemy.spin.stop()
-  game.ui.checkEndOfRound()
-}
-
-Enemy.prototype.getDistance = function(p1,p2) {
-  return Math.sqrt( Math.pow((p1.x - p2.x), 2) + Math.pow((p1.y - p2.y), 2) );
-}
-
-module.exports = Enemy
-},{}],5:[function(require,module,exports){
 var Enemy = require('../entities/enemy.js')
 
-var EnemyManager = function (game, opts)  {
+var EnemyManager = function (opts)  {
   var opts = opts || {};
   this.cursor = 0;
   this.waveNum = 0;
@@ -224,7 +30,7 @@ EnemyManager.prototype.createEnemyPool = function(opts) {
   // create pool of enemies for spawning
   this.group = game.add.group();
   for(var i = 0; i < 50; i++){
-    var enemy = new Enemy(game, {size: this.enemyHeight, speed: this.enemySpeed});
+    var enemy = new Enemy({size: this.enemyHeight, speed: this.enemySpeed});
     this.group.add(enemy);
   }
 }
@@ -274,8 +80,136 @@ EnemyManager.prototype.getDeadEnemies = function() {
 }
 
 module.exports = EnemyManager
-},{"../entities/enemy.js":4}],6:[function(require,module,exports){
-var Grid = function (game)  {
+},{"../entities/enemy.js":2}],2:[function(require,module,exports){
+var Enemy = function(opts) {
+  var opts = opts || {}
+  Phaser.Sprite.call(this, game, -50, -50, 'enemy');
+  this.setConfig(opts);
+  
+  game.physics.enable(this);
+  Phaser.Sprite.prototype.kill.call(this);
+}
+
+Enemy.prototype = Object.create(Phaser.Sprite.prototype)
+Enemy.prototype.constructor = Enemy;
+
+Enemy.prototype.setConfig = function(opts) {
+  // initialize configs
+  this.height = opts.size
+  this.width = opts.size
+  this.anchor.setTo(0.5,0.5);
+
+  this.speed = opts.speed;
+  this.maxHealth = opts.heath || 8;
+  
+  this.offset = game.grid.tileSize/2;
+  this.nextWaypoint = 0;
+}
+
+Enemy.prototype.pulsateTween = function(opts) {
+  this.spin = game.add.tween(this);
+  this.pulsate = game.add.tween(this);
+  var duration = game.rnd.integerInRange(this.speed*90,this.speed*100)
+  var delay = game.rnd.integerInRange(100,1000)
+  var angle = 360;
+  this.pulsate.to({height: 60, width:60}, duration/2, Phaser.Easing.Quadratic.InOut, true, delay, -1, true)
+  this.spin.to({angle: angle}, duration*2, Phaser.Easing.Linear.None, true, delay, -1)
+}
+
+Enemy.prototype.spawnTween = function(duration) {
+  this.startTween = game.add.tween(this);
+  this.startTweenAlpha = game.add.tween(this);
+
+  this.scale.set(0,0)
+  this.alpha = 0;
+
+  this.startTween.to({height: 50, width:50}, duration, Phaser.Easing.Quadratic.InOut, true)
+  this.startTweenAlpha.to({alpha: 1}, duration, Phaser.Easing.Quadratic.InOut, true)
+}
+
+Enemy.prototype.spawn = function(x, y, spacing, health) {
+  // initialize this enemy from the spawner
+  this.reset(x+this.offset, y+this.offset, health);
+  this.alive = false;
+  this.spawnTween(spacing/2);
+  game.time.events.add(spacing/2, this.startMoving, this)
+  this.nextWaypoint = 0;
+}
+
+Enemy.prototype.startMoving = function() {
+  var self = this;
+  this.alive = true;
+  
+  this.pulsateTween();
+  this.pathTween = game.add.tween(this);
+  if (this.nextWaypoint === 0) {
+    this.pathTween.to({x: this.x}, 10, Phaser.Easing.Linear.None);
+    this.nextWaypoint++;
+  }
+  
+  // determine the closest tile to the enemies current position
+  var tile = game.grid.map.getTileWorldXY(this.x, this.y, game.grid.tileSize, game.grid.tileSize, game.grid.layer)
+  var start = {x: tile.x, y: tile.y};
+
+  // determine the next waypoint we want to go to
+  var path1 = game.grid.getPath(start, game.grid.waypoints[0], true);
+  // var path2 = game.grid.getPath(start, game.grid.waypoints[1], true);
+  var path;
+  // if (PF.Util.pathLength(path1) > PF.Util.pathLength(path2)) {
+    // path = game.grid.getPath(start, game.grid.waypoints[1]);
+  // } else {
+    path = game.grid.getPath(start, game.grid.waypoints[0]);
+  // }
+  
+  // stop any tweens in progress 
+  if (this.lastTween) {this.lastTween.stop();}
+  this.lastTween = this.pathTween;
+  this.lastPath = path
+
+  // tween the enemy to that tile, and chain each tween needed to the next waypoint
+  for(var j = 1; j < path.length; j++) {
+    var nTile = game.grid.map.getTile(path[j].x, path[j].y, game.grid.layer);
+    var oTile = game.grid.map.getTile(path[j-1].x, path[j-1].y, game.grid.layer);
+    var nPos = {x: nTile.worldX + this.offset, y: nTile.worldY + this.offset};
+    var oPos = {x: oTile.worldX + this.offset, y: oTile.worldY + this.offset};
+    var distance = this.getDistance(nPos, oPos) * this.speed;
+    this.pathTween.to({x: nPos.x, y: nPos.y }, distance, Phaser.Easing.Linear.None);
+  }
+  this.pathTween.onComplete.add(this.kill, this)
+  this.pathTween.start();
+};
+
+Enemy.prototype.doKill = function(enemy) {
+  if (enemy.alive) {
+    enemy.kill()
+  }
+}
+
+Enemy.prototype.kill = function() {
+  this.pulsate.stop()
+  this.spin.stop()
+  this.pathTween.stop()
+  this.alive = false;
+  game.emitter.x = this.x;
+  game.emitter.y = this.y;
+  game.emitter.start(true, 4000, null, 10);
+
+  var die = game.add.tween(this);
+  die.to({height: 0, width:0, alpha: 0, angle: -900}, 500, Phaser.Easing.Quadratic.Out)
+  die.onComplete.add(function(){
+    Phaser.Sprite.prototype.kill.call(this);
+    game.ui.checkEndOfRound()
+  });
+  die.start();
+}
+
+Enemy.prototype.getDistance = function(p1,p2) {
+  return Math.sqrt( Math.pow((p1.x - p2.x), 2) + Math.pow((p1.y - p2.y), 2) );
+}
+
+module.exports = Enemy
+},{}],3:[function(require,module,exports){
+var Grid = function ()  {
   
   this.setConfig();
   this.group = game.add.group();
@@ -359,16 +293,16 @@ Grid.prototype.clear = function(direction) {
 
 Grid.prototype.openCenter = function(direction) {
   var x,y, angle
-  this.data[this.center.y-1][this.center.x-1] = 1;
-  this.data[this.center.y-1][this.center.x+1] = 1;
-  this.data[this.center.y  ][this.center.x  ] = 1;
-  this.data[this.center.y+1][this.center.x-1] = 1;
-  this.data[this.center.y+1][this.center.x+1] = 1;
+  this.data[this.center.y-1][this.center.x-1] = 3;
+  this.data[this.center.y-1][this.center.x+1] = 3;
+  this.data[this.center.y  ][this.center.x  ] = 3;
+  this.data[this.center.y+1][this.center.x-1] = 3;
+  this.data[this.center.y+1][this.center.x+1] = 3;
 
-  this.data[this.center.y-1][this.center.x] = 1; // up
-  this.data[this.center.y+1][this.center.x] = 1; // down
-  this.data[this.center.y][this.center.x-1] = 1; // left
-  this.data[this.center.y][this.center.x+1] = 1; // right
+  this.data[this.center.y-1][this.center.x] = 3; // up
+  this.data[this.center.y+1][this.center.x] = 3; // down
+  this.data[this.center.y][this.center.x-1] = 3; // left
+  this.data[this.center.y][this.center.x+1] = 3; // right
   if (direction === 0) {
     x = this.center.x; y = this.center.y-1; angle = 0;
   } else if (direction === 1) {
@@ -425,174 +359,142 @@ Grid.prototype.syncTowersVsData = function() {
   }
 }
 module.exports = Grid;
-},{}],7:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 var Tower = require('../entities/tower.js');
 
-var Interface = function (game)  {
+var Interface = function ()  {
   this.buildTime = 3000;
-  this.teamTowerFrame = (game.myTeam === 0) ? 2 : 3; // the index of the tileSprite we are painting with (0: empty, 1: wall)
-  this.teamWallFrame = (game.myTeam === 0) ? 1 : 1; // the index of the tileSprite we are painting with (0: empty, 1: wall)
+  this.activeObject = null;
+  this.phase = 0;
 
   // create flesh wall
   game.backGroup.create(0,0,'bg');
   
-  // create key ui elements
-  this.createCursor();
-  this.createText();
-  // this.createTowerSelector();
-  this.createSpawner();
-
-  this.activeWall = null;
-  this.phase = 0;
-
-  this.placementText = game.add.text(100, game.height-55, '', {fill: 'white'})
-  this.placementText.alpha = 0;
-  var key1 = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
-  var key2 = game.input.keyboard.addKey(Phaser.Keyboard.Z);
-  key2.onDown.add(this.rotateActiveWall, this);
-  key1.onDown.add(this.placeActiveWall, this);
-}
-
-Interface.prototype.constructor = Interface;
-
-Interface.prototype.createCursor = function() {
   // create cursor that will follow the active pointer
   this.marker = game.add.graphics();
-  // this.marker.lineStyle(2, 0x000000, 1);
-  // this.marker.drawRect(0, 0, game.grid.tileSize, game.grid.tileSize);
-}
+  this.marker.lineStyle(2, 0x000000, 1);
+  this.marker.drawRect(0, 0, game.grid.tileSize, game.grid.tileSize);
 
-Interface.prototype.createText = function() {
-  var style = { font: "32px Courier", fill: "#ffffff", align: "center" };
-  this.waveText = game.add.text(game.width/2, 50, "", style);
+  // create ui text
+  this.waveText = game.add.text(game.width/2, 50, "", {fill: "white", align: "center"});
   this.waveText.anchor.setTo(0.5,0.5);
-  this.connectionText = game.add.text(game.width/2, game.height/2, "", style);
-  this.connectionText.anchor.set(0.5);
-}
-
-Interface.prototype.createSpawner = function() {
+  this.placementText = game.add.text(100, game.height-55, '', {fill: 'white'})
+  this.placementText.alpha = 0;
+  
   // create sphincter
   this.spawner = game.backGroup.create(game.grid.center.tile.worldX, game.grid.center.tile.worldY, 'spawner');
   this.spawner.x += game.grid.tileSize/2;
   this.spawner.y += game.grid.tileSize/2;
   this.spawner.anchor.setTo(0.5,0.5)
+  game.input.onDown.add(this.attemptToPlace, this)
+
+  var key2 = game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR);
+  key2.onDown.add(this.rotateActiveObject, this);
 }
 
+Interface.prototype.constructor = Interface;
 
 Interface.prototype.update = function() {
   this.updateMarker();
-  this.updateTimer();
 }
 
 Interface.prototype.updateMarker = function(sprite, pointer) {
   var pointer = game.input.activePointer;
   if (pointer.worldX > 0 && pointer.worldY > 0) {
-    // update position of marker
     this.marker.x = game.grid.layer.getTileX(pointer.worldX) * game.grid.tileSize;
     this.marker.y = game.grid.layer.getTileY(pointer.worldY) * game.grid.tileSize;
   }
-  if (this.activeWall){
-    this.activeWall.x = this.marker.x+25;
-    this.activeWall.y = this.marker.y+25;
+  if (this.activeObject){
+    this.activeObject.x = this.marker.x+game.grid.tileSize/2;
+    this.activeObject.y = this.marker.y+game.grid.tileSize/2;
   }
 }
 
-Interface.prototype.updateTimer = function(sprite, pointer) {
-  // update timer information inbetween rounds
-  if (game.timeToNextRound) {
-    if (game.timeToNextRound.duration >= 0) {
-      var time = Math.floor(game.timeToNextRound.duration.toFixed(0)/1000);
-      this.waveText.text = 'Time until next \nround: ' + time + ' seconds';
-    }
-    if (game.timeToNextRound.duration === 0) {
-      this.waveText.text = '';
-    }
-  }  
-}
-
-Interface.prototype.rotateActiveWall = function() {
-  if (this.activeWall) {
-    this.activeWall.angle += 90;
+Interface.prototype.rotateActiveObject = function() {
+  if (this.activeObject) {
+    this.activeObject.angle += 90;
   }
 }
 
-Interface.prototype.placeActiveWall = function() {
-  if (this.activeWall) {
-    var placementOk = true;
-    var placementStatus = "";
-    if (this.activeWall instanceof Phaser.Group ){
-      var tiles = []
-      var backupData = cloneArray(game.grid.data)
-      // check if any tiles are over a wall already or out of boundsand flag if any are
-      this.activeWall.forEach(function(child){
-        var tile = game.grid.map.getTileWorldXY(child.world.x, child.world.y, game.grid.tileSize, game.grid.tileSize, game.grid.layer)
-        if (!tile) {
-          placementOk = false;
-          placementStatus = "wall is out of bounds";
-        } else if (game.grid.data[tile.y][tile.x] !== 0) {
-          placementOk = false;
-          placementStatus = "wall is over another wall";
-        }
-      }, this)
-      // if placement is okay after that, try placing the tile and see if there is still a path to the exit
-      if (placementOk) {
-        this.activeWall.forEach(function(child){
-          var tile = game.grid.map.getTileWorldXY(child.world.x, child.world.y, game.grid.tileSize, game.grid.tileSize, game.grid.layer)
-          game.grid.setData(1,tile.x,tile.y)
-        })
-        if (game.grid.getPath(game.grid.center, game.grid.waypoints[0], true) === false){
-          placementOk = false;
-          placementStatus = "creep path has been blocked";
-          game.grid.data = cloneArray(backupData)
-        }
-      }
-      // if there is still a path, go ahead and place the tile
-      if (placementOk) {
-        placementStatus = "wall placement is good";
-        this.activeWall.forEach(function(child){
-          var tile = game.grid.map.getTileWorldXY(child.world.x, child.world.y, game.grid.tileSize, game.grid.tileSize, game.grid.layer)
-
-          if (tile) {
-            game.grid.map.putTile(1, tile.x, tile.y, game.grid.layer);
-            game.grid.setData(1,tile.x,tile.y)
-          }
-        }, this)
-        this.activeWall.destroy()
-        this.activeWall = game.walls.createTower();
-      }
-    }else{
-      var tile = game.grid.map.getTileWorldXY(this.activeWall.x, this.activeWall.y, game.grid.tileSize, game.grid.tileSize, game.grid.layer)
-      if (game.grid.data[tile.y][tile.x] === 1){
-        placementStatus = "tower placement is good";
-        game.grid.map.putTile(2, tile.x, tile.y, game.grid.layer);
-        game.grid.setData(2,tile.x,tile.y)
-        this.activeWall = null
-        this.startSpawnPhase()
-      } else if (game.grid.data[tile.y][tile.x] === 0) {
-        placementStatus = "tower must be placed on wall";
-        placementOk = false;
-      } else if (game.grid.data[tile.y][tile.x] === 2) {
-        placementStatus = "tower cannot be placed on another tower";
-        placementOk = false;
-      }
+Interface.prototype.attemptToPlace = function() {
+  this.placementOk = true;
+  this.backupData = cloneArray(game.grid.data)
+  if (this.activeObject) {
+    var tiles = []
+    if (this.activeObject instanceof Phaser.Group ){
+      this.activeObject.forEach(this.checkWallPosition, this);
+    } else {
+      this.checkTowerPosition(this.activeObject, 'tower');
     }
-    if (!placementOk) game.juicy.shake(20,20);
-    this.placementText.text = placementStatus
-    this.placementText.alpha = 1;
-    game.time.events.add(1000,function(){
-      this.placementText.alpha = 0;
+    if (this.placementOk) {
+      this.placeActiveObject();
+    }
+  }
+}
+
+Interface.prototype.checkWallPosition = function(obj) {
+  var tile = game.grid.map.getTileWorldXY(obj.world.x, obj.world.y, game.grid.tileSize, game.grid.tileSize, game.grid.layer)
+  // check if any tiles are over a wall already or out of boundsand flag if any are
+  if (!tile) {
+    this.setPlacementStatus(false, "wall is out of bounds");
+  } else if (game.grid.data[tile.y][tile.x] !== 0) {
+    this.setPlacementStatus(false, "wall is over another wall");
+  }
+  
+  // try placing the tile and see if there is still a path to the exit
+  game.grid.setData(1,tile.x,tile.y)
+  if (game.grid.getPath(game.grid.center, game.grid.waypoints[0], true) === false){
+    this.setPlacementStatus(false, "creep path has been blocked");
+    game.grid.data = cloneArray(this.backupData)
+  }
+}
+
+Interface.prototype.checkTowerPosition = function(obj) {
+  var tile = game.grid.map.getTileWorldXY(obj.world.x, obj.world.y, game.grid.tileSize, game.grid.tileSize, game.grid.layer)
+  if (game.grid.data[tile.y][tile.x] === 0 || game.grid.data[tile.y][tile.x] === 3) {
+    this.setPlacementStatus(false, "tower must be placed on wall");
+  } else if (game.grid.data[tile.y][tile.x] === 2) {
+    this.setPlacementStatus(false, "tower cannot be placed on another tower");
+  }
+}
+
+Interface.prototype.placeActiveObject = function() {
+  if (this.activeObject instanceof Phaser.Group ){
+    this.activeObject.forEach(function(child){
+      var tile = game.grid.map.getTileWorldXY(child.world.x, child.world.y, game.grid.tileSize, game.grid.tileSize, game.grid.layer)
+      if (tile) {
+        game.grid.map.putTile(1, tile.x, tile.y, game.grid.layer);
+        game.grid.setData(1,tile.x,tile.y)
+      }
     }, this)
+    this.activeObject.destroy()
+    this.activeObject = game.walls.createTower();
+  } else {
+    var tile = game.grid.map.getTileWorldXY(this.activeObject.x, this.activeObject.y, game.grid.tileSize, game.grid.tileSize, game.grid.layer)
+    game.grid.map.putTile(2, tile.x, tile.y, game.grid.layer);
+    game.grid.setData(2,tile.x,tile.y)
+    this.activeObject = null
+    this.startSpawnPhase()
   }
+}
+
+Interface.prototype.setPlacementStatus = function(status, message) {
+  var message = message || '';
+  this.placementText.text = message
+  this.placementOk = status;
+  this.placementText.alpha = 1;
+  game.time.events.add(1000,function(){
+    this.placementText.alpha = 0;
+  }, this)
+  if (!this.placementOk) game.juicy.shake(20,20);
 }
 
 Interface.prototype.startBuildPhase = function() {
-  // create a timer til the start of the next round
-  // game.timeToNextRound = game.time.create(false);
-  // game.timeToNextRound.add(this.buildTime, game.enemies.spawnWave, game.enemies)
-  // game.timeToNextRound.start();
+  // game.eurecaServer.sendRoundFinished(game.sessionId)
+  // this.waveText.text = 'waiting for other player';
   this.phase = 0;
   game.grid.openCenter(game.enemies.direction)
-  this.activeWall = game.walls.createWall();
+  this.activeObject = game.walls.createWall();
 }
 
 Interface.prototype.startSpawnPhase = function() {
@@ -602,36 +504,20 @@ Interface.prototype.startSpawnPhase = function() {
 }
 
 Interface.prototype.checkEndOfRound = function() {
-  // check if there are any enemies left
   if (game.enemies.getAliveEnemies().length === 0 && this.phase === 1) {
-    // if not, send signal to server
-    // game.eurecaServer.sendRoundFinished(game.sessionId)
     this.startBuildPhase()
-    // this.waveText.text = 'waiting for other player';
   }
 }
 
-Interface.prototype.pickTile = function(sprite, pointer) {
-  this.teamTowerFrame = game.math.snapToFloor(pointer.x, game.grid.tileSize) / game.grid.tileSize;
-}
 module.exports = Interface;
-function cloneArray (existingArray) {
-   var newObj = (existingArray instanceof Array) ? [] : {};
-   for (i in existingArray) {
-      if (i == 'clone') continue;
-      if (existingArray[i] && typeof existingArray[i] == "object") {
-       newObj[i] = cloneArray(existingArray[i]);
-      } else {
-         newObj[i] = existingArray[i]
-      }
-   }
-   return newObj;
-}
-},{"../entities/tower.js":8}],8:[function(require,module,exports){
+
+},{"../entities/tower.js":5}],5:[function(require,module,exports){
 var Tower = function(x, y) {
-  Phaser.Sprite.call(this, game, x, y, 'tower');
+  Phaser.Sprite.call(this, game, x, y, 'tower2');
   this.anchor.setTo(0.5,0.5)
   this.range = 300;
+  this.animations.add('idle',[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18], 10, true)
+  this.animations.play('idle')
   game.towers.add(this);
   game.time.events.loop(Phaser.Timer.SECOND/4, this.shoot, this)
 }
@@ -639,37 +525,134 @@ var Tower = function(x, y) {
 Tower.prototype = Object.create(Phaser.Sprite.prototype)
 Tower.prototype.constructor = Tower;
 
-Tower.prototype.pointAt = function(enemy) {
-  this.rotation = game.physics.arcade.angleToXY(this, enemy.x, enemy.y);
+
+Tower.prototype.update = function() {
+  if (!this.hasTarget) {
+    this.getTarget()
+  }
+  this.pointAtTarget();
 }
 
-Tower.prototype.update = function(enemy) {
-  var potentialTargets = game.enemies.getAliveEnemies();
+Tower.prototype.getTarget = function() {
+  var enemies = game.enemies.getAliveEnemies();
   var lastDistance = null;
-  for(var i = 0; i < potentialTargets.length; i++) {
-    var distance = game.physics.arcade.distanceToXY(this, potentialTargets[i].x, potentialTargets[i].y);
+  for(var i = 0; i < enemies.length; i++) {
+    var distance = game.physics.arcade.distanceToXY(this, enemies[i].x, enemies[i].y);
     if(!lastDistance || lastDistance > distance) {
       lastDistance = distance;
-      this.target = potentialTargets[i]
+      this.target = enemies[i];
     }
-  }
-  if (this.target && this.target.alive) {
-    this.pointAt(this.target);
   }
 }
 
 Tower.prototype.shoot = function(enemy) {
-  if(!this.target || !this.target.alive) return
+  if(!this.hasTarget) return
   var distance = game.physics.arcade.distanceToXY(this, this.target.x, this.target.y);
   if (this.range >= distance) {
     var bullet = game.bullets.create(this.x, this.y, 'bullet')
     game.physics.enable(bullet)
     bullet.outOfBoundsKill = true;
     game.physics.arcade.moveToXY(bullet, this.target.x, this.target.y, 200, 200)
+  } else {
+    this.target = null;
   }
 }
 
+Tower.prototype.pointAtTarget = function() {
+  if(!this.hasTarget) return
+  this.rotation = game.physics.arcade.angleToXY(this, this.target.x, this.target.y);
+}
+
+Object.defineProperty(Tower.prototype, 'hasTarget', {
+    get: function() {
+        return (this.target && this.target.alive);
+    }
+});
 module.exports = Tower
+},{}],6:[function(require,module,exports){
+var Wall = require('../entities/wall.js');
+
+var WallGroup = function(shape) {
+  Phaser.Group.call(this, game);
+  this.classType = Wall;
+  for(var i = 0; i < shape.length; i++) {
+    var x = shape[i][0]*game.grid.tileSize;
+    var y = shape[i][1]*game.grid.tileSize;
+    var wall = new Wall(x, y)
+    this.add(wall)
+  }
+}
+
+WallGroup.prototype = Object.create(Phaser.Group.prototype);
+WallGroup.prototype.constructor = WallGroup;
+
+module.exports = WallGroup
+
+},{"../entities/wall.js":8}],7:[function(require,module,exports){
+var WallGroup = require('../entities/wall-group.js');
+var Tower = require('../entities/tower.js');
+
+var WallManager = function() {
+  this.minos = [
+    [
+      [
+        [0,0]
+      ]
+    ], [
+      [
+        [0,0], [1,0],
+      ]
+    ], [
+      [
+        [0,0], [1,0], [2,0],
+      ], [
+        [0,0], [1,0], [0,1],
+      ]
+    ], [
+      [
+        [0,0],[1,0],[2,0],[3,0]
+      ], [
+        [0,0],[1,0],[0,1],[1,1]
+      ], [
+        [0,0],[1,0],[2,0],[0,1]
+      ], [
+        [0,0],[1,0],[2,0],[2,1]
+      ], [
+        [0,0],[0,1],[1,1],[1,2]
+      ], [
+        [0,0],[1,0],[1,1],[1,2]
+      ], [
+        [0,0],[1,0],[2,0],[1,1]
+      ]
+    ]
+  ]
+}
+
+WallManager.prototype.constructor = WallManager;
+
+WallManager.prototype.createWall = function() {
+  var size = game.rnd.integerInRange(0,this.minos.length-1)
+  var shape = game.rnd.integerInRange(0,this.minos[size].length-1)
+  var wall = new WallGroup(this.minos[size][shape]);
+  return wall;
+}
+
+WallManager.prototype.createTower = function() {
+  var tower = new Tower(0,0);
+  return tower;
+}
+
+module.exports = WallManager
+},{"../entities/tower.js":5,"../entities/wall-group.js":6}],8:[function(require,module,exports){
+var Wall = function(x,y) {
+  Phaser.Sprite.call(this, game, x, y, 'wall');
+  this.anchor.set(0.5,0.5)
+}
+
+Wall.prototype = Object.create(Phaser.Sprite.prototype);
+Wall.prototype.constructor = Wall;
+
+module.exports = Wall
 },{}],9:[function(require,module,exports){
 window.game = new Phaser.Game(750, 1334, Phaser.AUTO, 'game-container');
 
@@ -1259,11 +1242,10 @@ module.exports = {
     this.load.spritesheet('button', 'images/button.png', 193, 71);
     this.load.image('spawner', 'images/spawner.png');
     this.load.image('bullet', 'images/bullet.png');
+    this.load.image('gib', 'images/gib.png');
     this.load.image('arrow', 'images/arrow.png');
-    this.load.image('towerMenu', 'images/selector2.png');
+    this.load.atlasJSONHash('tower2', 'images/tower2.png', 'images/tower.json');
     this.load.image('tower', 'images/tower.png');
-    this.load.image('towerbutton', 'images/towerbutton.png');
-    this.load.image('wallbutton', 'images/wallbutton.png');
     this.load.image('bg', 'images/bg.jpg');
     this.load.image('enemy', 'images/enemy4.png');
     this.load.image('tile', 'images/tile3.png');
@@ -1273,6 +1255,16 @@ module.exports = {
   onLoadComplete: function() {
     game.state.start('play', true, false);
   }
+}
+
+window.cloneArray = function (_arr) {
+  var arr = (_arr instanceof Array) ? [] : {};
+  for (i in _arr) {
+    if (i == 'clone') continue;
+    var recurse = (_arr[i] && typeof _arr[i] == "object");
+    arr[i] = recurse ? cloneArray(_arr[i]) : _arr[i];
+  }
+  return arr;
 }
 },{}],13:[function(require,module,exports){
 module.exports = {
@@ -1292,8 +1284,8 @@ module.exports = {
   }
 }
 },{}],14:[function(require,module,exports){
-var EnemyManager = require('../entities/enemyManager.js');
-var WallManager = require('../entities/WallManager.js');
+var EnemyManager = require('../entities/enemy-manager.js');
+var WallManager = require('../entities/wall-manager.js');
 var Grid = require('../entities/grid.js');
 var Interface = require('../entities/interface.js');
 
@@ -1310,17 +1302,26 @@ module.exports = {
 
     // setup group for background elements
     game.backGroup = game.add.group();
-    game.bullets = game.add.group()
-    game.towers = game.add.group()
 
     // initialize individual game components
-    game.grid = new Grid(game);
-    game.enemies = new EnemyManager(game);
-    game.walls = new WallManager(game);
-    game.ui = new Interface(game);
+    game.grid = new Grid();
+
+    game.emitter = game.add.emitter(0, 0, 50)
+    game.emitter.makeParticles('gib')
+    game.emitter.gravity = 0
+    game.emitter.setScale(3, 0, 3, 0, 4000, Phaser.Easing.Quintic.Out);
+    game.emitter.setAlpha(1, 0, 4000);
+    
+    game.enemies = new EnemyManager();
+    game.walls = new WallManager();
+    game.ui = new Interface();
+
+    game.towers = game.add.group()
+    game.bullets = game.add.group()
 
     game.gui = new dat.GUI();
     game.gui.add(game.time, 'slowMotion', 0.1, 3);
+
 
     // start the game up!
     game.ui.startBuildPhase()
@@ -1350,4 +1351,4 @@ module.exports = {
   }
 }
 
-},{"../entities/WallManager.js":3,"../entities/enemyManager.js":5,"../entities/grid.js":6,"../entities/interface.js":7,"../lib/juicy.js":10}]},{},[9]);
+},{"../entities/enemy-manager.js":1,"../entities/grid.js":3,"../entities/interface.js":4,"../entities/wall-manager.js":7,"../lib/juicy.js":10}]},{},[9]);

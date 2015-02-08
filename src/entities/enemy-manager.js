@@ -1,6 +1,6 @@
 var Enemy = require('../entities/enemy.js')
 
-var EnemyManager = function (game, opts)  {
+var EnemyManager = function (opts)  {
   var opts = opts || {};
   this.cursor = 0;
   this.waveNum = 0;
@@ -29,7 +29,7 @@ EnemyManager.prototype.createEnemyPool = function(opts) {
   // create pool of enemies for spawning
   this.group = game.add.group();
   for(var i = 0; i < 50; i++){
-    var enemy = new Enemy(game, {size: this.enemyHeight, speed: this.enemySpeed});
+    var enemy = new Enemy({size: this.enemyHeight, speed: this.enemySpeed});
     this.group.add(enemy);
   }
 }
