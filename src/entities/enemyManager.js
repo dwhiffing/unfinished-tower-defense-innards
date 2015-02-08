@@ -14,7 +14,7 @@ EnemyManager.prototype.setConfig = function(opts) {
   // initialize configs
   this.tileSize = opts.tileSize || game.grid.tileSize;
   this.enemyHeight = opts.enemyHeight || this.tileSize*.9;
-  this.enemySpeed = opts.enemySpeed || 8;
+  this.enemySpeed = opts.enemySpeed || 1;
   
   // space between enemies in wave
   this.spacing = opts.spacing || 40 * this.tileSize;
@@ -51,7 +51,7 @@ EnemyManager.prototype.spawnWave = function(wavesize){
   this.cursor = 0;
   this.spawnEnemy(spawnx,spawny);
   game.time.events.repeat(this.spacing, this.enemiesToRevive.length-1, this.spawnEnemy, this, spawnx, spawny);
-  game.grid.clear(this.direction)
+  game.grid.openCenter(this.direction)
   this.direction++;
   if (this.direction === 4) this.direction = 0;
 }

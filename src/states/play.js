@@ -1,4 +1,5 @@
 var EnemyManager = require('../entities/enemyManager.js');
+var WallManager = require('../entities/WallManager.js');
 var Grid = require('../entities/grid.js');
 var Interface = require('../entities/interface.js');
 
@@ -15,17 +16,18 @@ module.exports = {
     // initialize individual game components
     game.grid = new Grid(game);
     game.enemies = new EnemyManager(game);
+    game.walls = new WallManager(game);
     game.ui = new Interface(game);
 
     // start the game up!
-    game.ui.startSpawnPhase()
+    game.ui.startBuildPhase()
   },
 
   update: function() {
     // overlap enemies and bullets
     game.physics.arcade.overlap(game.enemies.group, game.bullets, this.bulletOverlap)
     // update ui elements / text
-    game.ui.updateTimer();
+    game.ui.update();
   },
 
   bulletOverlap: function(enemy, bullet) {

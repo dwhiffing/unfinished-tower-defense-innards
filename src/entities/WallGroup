@@ -1,0 +1,8 @@
+var WallGroup = function() {
+  Phaser.Group.call(this, game);
+}
+
+WallGroup.prototype = Object.create(Phaser.Group.prototype);
+WallGroup.prototype.constructor = WallGroup;
+
+module.exports = WallGroup

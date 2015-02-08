@@ -16,6 +16,7 @@ module.exports = {
     this.load.image('bg', 'images/bg.jpg');
     this.load.image('enemy', 'images/enemy4.png');
     this.load.image('tile', 'images/tile3.png');
+    this.load.image('wall', 'images/tile.png');
   },
 
   onLoadComplete: function() {

@@ -74,7 +74,10 @@ Grid.prototype.clear = function(direction) {
       this.data[i][j] = 0;
     }
   }
-  
+  this.openCenter(0);
+}
+
+Grid.prototype.openCenter = function(direction) {
   this.data[this.center.y-1][this.center.x-1] = 1;
   this.data[this.center.y-1][this.center.x+1] = 1;
   this.data[this.center.y  ][this.center.x  ] = 1;
@@ -95,6 +98,7 @@ Grid.prototype.clear = function(direction) {
   } else {
     this.data[this.center.y][this.center.x+1] = 0; // right
   }
+
 }
 
 Grid.prototype.getPath = function(start, end, toVector) {
