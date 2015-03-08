@@ -15,21 +15,11 @@ module.exports = {
     this.load.image('tower', 'images/tower.png');
     this.load.image('bg', 'images/bg.jpg');
     this.load.image('enemy', 'images/enemy4.png');
-    this.load.image('tile', 'images/tile3.png');
+    this.load.image('tile', 'images/wall.png');
     this.load.image('wall', 'images/tile.png');
   },
 
   onLoadComplete: function() {
     game.state.start('play', true, false);
   }
-}
-
-window.cloneArray = function (_arr) {
-  var arr = (_arr instanceof Array) ? [] : {};
-  for (i in _arr) {
-    if (i == 'clone') continue;
-    var recurse = (_arr[i] && typeof _arr[i] == "object");
-    arr[i] = recurse ? cloneArray(_arr[i]) : _arr[i];
-  }
-  return arr;
 }

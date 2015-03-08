@@ -8,14 +8,15 @@
     "start": "./node_modules/.bin/gulp default"
   },
   "devDependencies": {
-    "beefy": "^2.1.2",
-    "browserify": "^8.1.1",
+    "babelify": "^5.0.4",
+    "browserify": "^9.0.3",
+    "gulp": "*",
+    "gulp-babel": "^4.0.0",
+    "gulp-server-livereload": "^1.2.1",
+    "gulp-util": "^3.0.4",
     "phaser": "^2.2.2",
-    "pathfinding": "^0.4.16"
-  },
-  "dependencies": {
-    "engine.io": "^1.5.1",
-    "eureca.io": "^0.6.2",
-    "express": "^4.11.1"
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^2.4.0"
   }
 }

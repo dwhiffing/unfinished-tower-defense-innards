@@ -1,7 +1,7 @@
 module.exports = {
 
   preload: function () {
-    this.load.baseURL = 'src/assets/';
+    this.load.baseURL = 'assets/';
   },
 
   create: function () {

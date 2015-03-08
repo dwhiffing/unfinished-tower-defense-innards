@@ -1,17 +1,13 @@
-var Wall = require('../entities/wall.js');
+import Wall from '../entities/wall.js';
 
-var WallGroup = function(shape) {
-  Phaser.Group.call(this, game);
-  this.classType = Wall;
-  for(var i = 0; i < shape.length; i++) {
-    var x = shape[i][0]*game.grid.tileSize;
-    var y = shape[i][1]*game.grid.tileSize;
-    var wall = new Wall(x, y)
-    this.add(wall)
+class WallGroup extends Phaser.Group{
+  constructor(shape) {
+    super(game);
+    for(var i = 0; i < shape.length; i++) {
+      var x = shape[i][0]*game.grid.tileSize;
+      var y = shape[i][1]*game.grid.tileSize;
+      this.add(new Wall(x, y));
+    }
   }
 }
-
-WallGroup.prototype = Object.create(Phaser.Group.prototype);
-WallGroup.prototype.constructor = WallGroup;
-
-module.exports = WallGroup
+export default WallGroup

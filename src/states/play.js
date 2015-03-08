@@ -36,7 +36,6 @@ module.exports = {
     game.gui = new dat.GUI();
     game.gui.add(game.time, 'slowMotion', 0.1, 3);
 
-
     // start the game up!
     game.ui.startBuildPhase()
   },
