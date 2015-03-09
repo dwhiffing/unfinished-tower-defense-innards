@@ -19,12 +19,6 @@ class Interface {
     this.waveText.anchor.setTo(0.5,0.5);
     this.status = game.add.text(100, game.height-55, '', {fill: 'white'})
     this.status.alpha = 0;
-    
-    // create sphincter
-    this.spawner = game.backGroup.create(game.grid.center.tile.worldX, game.grid.center.tile.worldY, 'spawner');
-    this.spawner.x += game.grid.tileSize/2;
-    this.spawner.y += game.grid.tileSize/2;
-    this.spawner.anchor.setTo(0.5,0.5)
 
     game.input.onDown.add(this.attemptToPlace, this);
     game.input.keyboard.addKey(Phaser.Keyboard.SPACEBAR).onDown.add(this.rotateActive, this);
@@ -116,7 +110,7 @@ class Interface {
       this.active = null
       this.startSpawnPhase()
     }
-    // game.grid.setTileData()
+    game.grid.setTileData()
   }
 
   placeThing(x, y, i) {

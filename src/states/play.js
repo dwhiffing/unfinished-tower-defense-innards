@@ -26,9 +26,9 @@ module.exports = {
     game.emitter.setScale(3, 0, 3, 0, 4000, Phaser.Easing.Quintic.Out);
     game.emitter.setAlpha(1, 0, 4000);
     
-    game.enemies = new EnemyManager();
     game.walls = new WallManager();
     game.ui = new Interface();
+    game.enemies = new EnemyManager();
 
     game.towers = game.add.group()
     game.bullets = game.add.group()

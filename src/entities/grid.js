@@ -2,9 +2,6 @@ class Grid  {
   constructor()  {
     
     this.setConfig();
-    this.walls = game.add.group();
-    this.towers = game.add.group();
-    
     // temporary home base graphics
     this.graphics = game.add.graphics(0,0);
     this.graphics.lineStyle(0);
@@ -21,14 +18,12 @@ class Grid  {
     // set up the tile layer to draw the walls
     this.wall_layer = this.map.create('wall_layer',
       this.width, this.height, // the number of tiles wide/high the grid is
-      this.tileSize, this.tileSize, // the size of the individual tiles
-      this.walls // the group the layer is added to
+      this.tileSize, this.tileSize // the size of the individual tiles
     )
     // set up the tile layer to draw the towers
-    this.tower_layer = this.map.create('tower_layer',
+    this.tower_layer = this.map.createBlankLayer('tower_layer',
       this.width, this.height, // rowNum, colNum
-      this.tileSize, this.tileSize, // tile width/height
-      this.towers // group layer is added to
+      this.tileSize, this.tileSize // tile width/height
     )
     
     // fill map with empty tiles
@@ -46,7 +41,7 @@ class Grid  {
     this.center = {};
     this.center.x = Math.floor(this.width/2);
     this.center.y = Math.floor(this.height/2);
-    this.center.tile = this.map.getTile(this.center.x, this.center.y);
+    this.center.tile = this.map.getTile(this.center.x, this.center.y) || this.map.putTileWorldXY(16, this.center.x, this.center.y, this.tileSize, this.tileSize, this.wall_layers);
 
     this.clear();
     this.drawWaypoints();
@@ -75,6 +70,15 @@ class Grid  {
         this.data[i][j] = 0;
       }
     }
+    if(this.map.getTile(this.center.y-1, this.center.x-1)) {
+
+    this.map.getTile(this.center.y-1, this.center.x-1).index = 0;
+    this.map.getTile(this.center.y-1, this.center.x-1).index = 0;
+    this.map.getTile(this.center.y-1, this.center.x+1).index = 0;
+    this.map.getTile(this.center.y  , this.center.x  ).index = 0;
+    this.map.getTile(this.center.y+1, this.center.x-1).index = 0;
+    this.map.getTile(this.center.y+1, this.center.x+1).index = 0;
+    }
     this.openCenter(0);
   }
 
@@ -95,23 +99,20 @@ class Grid  {
   }
 
   setTileData() {
-    var layer = this.map.getLayer('layer')
-    for (var y = 0, h = this.map.layers[layer].height; y < h; y++) {
-      for (var x = 0, w = this.map.layers[layer].width; x < w; x++) {
-        var tile = this.map.layers[layer].data[y][x];
-        if (tile) {
-          var frame = 0;
-          
-          var above = this.map.getTileAbove(layer, x, y);
-          var below = this.map.getTileBelow(layer, x, y);
-          var left = this.map.getTileLeft(layer, x, y);
-          var right = this.map.getTileRight(layer, x, y); 
-
-          if (above) frame += 1;
-          if (right) frame += 2;
-          if (below) frame += 4;
-          if (left) frame += 8;
-
+    var layer = this.map.layers[0];
+    for (var y = 0, h = layer.height; y < h; y++) {
+      for (var x = 0, w = layer.width; x < w; x++) {
+        var tile = layer.data[y][x];
+        if(tile && tile.index !== 16) {
+          var frame = 0, above, below, left, right;
+          if (y>0) above = layer.data[y-1][x];
+          if (y<layer.height-1) below = layer.data[y+1][x];
+          if (x>0) left = layer.data[y][x-1];
+          if (x<layer.width) right = layer.data[y][x+1];
+          if (above && above.index !== 16) frame += 1;
+          if (right && right.index !== 16) frame += 2;
+          if (below && below.index !== 16) frame += 4;
+          if (left && left.index !== 16) frame += 8;
           this.map.putTile(frame, tile.x, tile.y, this.wall_layer);
         }
       }
