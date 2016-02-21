@@ -1,11 +1,35 @@
 class Grid  {
-  constructor()  {
+  constructor(opts)  {
+    // initialize config vars for grid
+    opts = opts || {};
+    this.width = opts.width || 15;
+    this.height = opts.height || 25;
+    this.tileSize = this.tileSize = opts.tileSize || 50;
+    this.offset = {x: 50, y: 50}
     
-    this.setConfig();
+    var middle = Math.ceil( (this.height-1) / 2);
+    this.waypoints = [
+      {x: 0, y: 0}
+    ];
+
+    this.newLevel()
+  }
+
+  newLevel() {
     // temporary home base graphics
-    this.graphics = game.add.graphics(0,0);
+    this.graphics = game.add.graphics(this.offset.x,this.offset.y);
     this.graphics.lineStyle(0);
     this.graphics.beginFill(0xffff00);
+
+    // temporary home base graphics
+    this.gridLines = game.add.graphics(this.offset.x,this.offset.y);
+    this.gridLines.lineStyle(1, 0x000000);
+    for (var x = 0; x <= this.tileSize*(this.width-3); x+=this.tileSize) {
+      for (var y = 0; y <= this.tileSize*(this.height-1); y+=this.tileSize) {
+        this.gridLines.moveTo(x, y)
+        this.gridLines.drawRect(x, y, this.tileSize, this.tileSize)
+      }
+    }
     
     // initialize a Phaser tilemap to keep track of walls
     this.map = game.add.tilemap();
@@ -20,45 +44,53 @@ class Grid  {
       this.width, this.height, // the number of tiles wide/high the grid is
       this.tileSize, this.tileSize // the size of the individual tiles
     )
+
+    // adjust tile layer to be offset to center it and make room of the ui
+    this.wall_layer.cameraOffset = {
+      x: this.offset.x, 
+      y: this.offset.y
+    }
+    this.wall_layer.crop = {
+      x: this.offset.x,
+      y: this.offset.y,
+      width: this.wall_layer.width - this.offset.x,
+      height: this.wall_layer.height - this.offset.y
+    }
+    this.wall_layer.resizeWorld()
+
     // set up the tile layer to draw the towers
     this.tower_layer = this.map.createBlankLayer('tower_layer',
       this.width, this.height, // rowNum, colNum
       this.tileSize, this.tileSize // tile width/height
     )
+
+    // adjust tile layer to be offset to center it and make room of the ui
+    this.tower_layer.cameraOffset = {
+      x: this.offset.x, 
+      y: this.offset.y
+    }
+    this.tower_layer.crop = {
+      x: this.offset.x,
+      y: this.offset.y,
+      width: this.tower_layer.width - this.offset.x,
+      height: this.tower_layer.height - this.offset.y
+    }
+    this.tower_layer.resizeWorld()
     
     // fill map with empty tiles
     this.map.fill(16, 0, 0, this.width, this.height, this.wall_layer)
 
-    // create a buffer around the tile map to make room for user interface and background elements
-    // TODO: This method sucks. Find a better way.
-    game.world.setBounds(0,-this.buffer, this.map.widthInPixels+this.buffer*2, this.map.heightInPixels+this.buffer*2);
-    game.camera.x = 0; game.camera.y = -this.buffer;
-    this.wall_layer.resizeWorld();
-
     // initialize the pathfinder for the creeps
     this.finder = new PF.AStarFinder();
 
-    this.center = {};
-    this.center.x = Math.floor(this.width/2);
-    this.center.y = Math.floor(this.height/2);
+    this.center = {
+      x: Math.floor(this.width/2),
+      y: Math.floor(this.height/2)
+    };
     this.center.tile = this.map.getTile(this.center.x, this.center.y) || this.map.putTileWorldXY(16, this.center.x, this.center.y, this.tileSize, this.tileSize, this.wall_layers);
 
     this.clear();
     this.drawWaypoints();
-  }
-
-  setConfig(opts){
-    // initialize config vars for grid
-    opts = opts || {};
-    this.width = opts.width || 15;
-    this.height = opts.height || 25;
-    this.tileSize = this.tileSize = opts.tileSize || 50;
-    this.buffer = (game.height - this.height*this.tileSize)/2;
-    
-    var middle = Math.ceil( (this.height-1) / 2);
-    this.waypoints = [
-      {x: 0, y: 0}
-    ];
   }
 
   clear(direction) {

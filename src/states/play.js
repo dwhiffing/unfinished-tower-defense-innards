@@ -33,11 +33,16 @@ module.exports = {
     game.towers = game.add.group()
     game.bullets = game.add.group()
 
-    game.gui = new dat.GUI();
-    game.gui.add(game.time, 'slowMotion', 0.1, 3);
+    // game.gui = new dat.GUI();
+    // game.gui.add(game.time, 'slowMotion', 0.1, 3);
 
     // start the game up!
     game.ui.startBuildPhase()
+    // game.input.onDown.add(this.goFull, this)
+  },
+
+  goFull() {
+    game.scale.startFullScreen(false);
   },
 
   update: function() {

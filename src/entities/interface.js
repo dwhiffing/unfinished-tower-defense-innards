@@ -32,7 +32,9 @@ class Interface {
     var pointer = game.input.activePointer;
     if (pointer.worldX > 0 && pointer.worldY > 0) {
       this.marker.x = game.grid.wall_layer.getTileX(pointer.worldX) * game.grid.tileSize;
+      // this.marker.x += game.grid.offset.x
       this.marker.y = game.grid.wall_layer.getTileY(pointer.worldY) * game.grid.tileSize;
+      // this.marker.y += game.grid.offset.y
     }
     if (this.active){
       this.active.x = this.marker.x+game.grid.tileSize/2;
@@ -115,7 +117,7 @@ class Interface {
 
   placeThing(x, y, i) {
     var size = game.grid.tileSize
-    var tile = game.grid.getWall(x, y)
+    var tile = game.grid.getWall(x-game.grid.offset.x, y-game.grid.offset.y)
     if (tile) {
       game.grid.map.putTile(i, tile.x, tile.y, game.grid.wall_layer);
       game.grid.set(i,tile.x,tile.y)

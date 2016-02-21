@@ -1,6 +1,6 @@
 import Enemy from '../entities/enemy.js';
 
-class EnemyManager {
+export default class EnemyManager {
   constructor(opts)  {
     var opts = opts || {};
     this.wave_num = 0;
@@ -8,15 +8,7 @@ class EnemyManager {
     this.setConfig(opts);
     this.setSpawnPoint();
     this.createEnemyPool();
-
-    // create sphincter
-    this.spawner = game.backGroup.create(game.grid.center.tile.worldX, game.grid.center.tile.worldY, 'spawner');
-    this.spawn_anim = this.spawner.animations.add('spawn',[0,1,2,3,4,5,6,7,6,5,4,3,2,1], 60, true)
-    this.idle_anim = this.spawner.animations.add('idle',[0,1,2,3,4,5,6,7,6,5,4,3,2,1], 5, true)
-    this.spawner.animations.play('idle')
-    this.spawner.x += game.grid.tileSize/2;
-    this.spawner.y += game.grid.tileSize/2;
-    this.spawner.anchor.setTo(0.5,0.5)
+    this.createSphincter();
   }
 
   setConfig(opts) {
@@ -33,49 +25,53 @@ class EnemyManager {
     this.direction = 0;
   }
 
+  setSpawnPoint(x, y) {
+    let center_tile = game.grid.getCenterTile()
+    x = x || center_tile.worldX
+    y = y || center_tile.worldY
+    this.spawn_point = {x, y};
+  }
+
+  createSphincter() {
+    let center = game.grid.getCenterTile()
+    let offset = game.grid.tileSize/2
+    this.spawner = game.backGroup.create(center.worldX+offset, center.worldY+offset, 'spawner');
+    this.spawn_anim = this.spawner.animations.add('spawn',[0,1,2,3,4,5,6,7,6,5,4,3,2,1], 60, true)
+    this.idle_anim = this.spawner.animations.add('idle',[0,1,2,3,4,5,6,7,6,5,4,3,2,1], 5, true)
+    this.spawner.animations.play('idle')
+    this.spawner.anchor.setTo(0.5,0.5)
+  }
+
   createEnemyPool(opts) {
     this.group = game.add.group();
     for (var i = 0; i < 50; i++) {
-      this.group.add(new Enemy({size: this.enemyHeight, speed: this.enemySpeed}));
-    }
-  }
-
-  setSpawnPoint(x, y) {
-    game.grid.center.tile = game.grid.getCenterTile()
-    if (!x && !y) {
-      this.spawn_point =  {x: game.grid.center.tile.worldX, y: game.grid.center.tile.worldY};
-    } else {
-      if (x) this.spawn_point.x = x;
-      if (y) this.spawn_point.y = y;
+      this.group.add(new Enemy({
+        size: this.enemyHeight, 
+        speed: this.enemySpeed
+      }));
     }
   }
 
   spawnWave(){
-    var i = 0;
     this.spawn_anim.speed = this.spacing/10;
     this.spawner.animations.play('spawn')
-    this.enemiesLeft = this.getDeadEnemies().splice(1, this.wave_size++);
-    for (let enemy of this.enemiesLeft) {
-      game.time.events.add(this.spacing*i++, () => {
+    this.enemiesLeft = this.getDeadEnemies().splice(1, this.wave_size);
+    this.enemiesLeft.forEach((enemy, index) => {
+      game.time.events.add(this.spacing*index, () => {
         enemy.spawn(this.spawn_point.x, this.spawn_point.y, this.spacing, this.wave_num*2);
-      })
-      if (i === this.wave_size-1){
-        game.time.events.add(this.spacing*i, () => {
+        if (index+1 === this.wave_size) {
           this.spawner.animations.play('idle')
-        })
-      } 
-    }
+        }
+      })
+    })
     this.direction = this.wave_num++ % 4;
   }
 
   getAliveEnemies(group=this.group) {
-    return group.filter(function(obj){if(obj.alive===true)return obj }).list
+    return group.filter(obj => obj.alive).list
   }
 
   getDeadEnemies(group=this.group) {
-    return group.filter(function(obj){if(obj.alive===false)return obj }).list
+    return group.filter(obj => !obj.alive).list
   }
-
 }
-
-export default EnemyManager
